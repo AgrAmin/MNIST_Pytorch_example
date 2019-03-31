@@ -3,9 +3,7 @@
 Building 3 layer Neural Network from and evaluating the classifier performance for each class
 
 1- Picking device type : CPU or GPU
-
 2- (loading prtrained model)
-
   2.2 freezing parametrs. (Gradient no backward)
 3- Define classifier (sequential)
   3.1 Linear transformation
