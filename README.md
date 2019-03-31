@@ -1,8 +1,11 @@
 # MNIST_Pytorch_example
+
 Building 3 layer Neural Network from and evaluating the classifier performance for each class
 
 1- Picking device type : CPU or GPU
+
 2- (loading prtrained model)
+
   2.2 freezing parametrs. (Gradient no backward)
 3- Define classifier (sequential)
   3.1 Linear transformation
@@ -21,3 +24,5 @@ Building 3 layer Neural Network from and evaluating the classifier performance f
 8- Evaluate the classifier performane for each class
   8.2 show the graph validation loss (not in this example) and test loss (calculated but not showed)
 9-Saving the model (not in this example)
+
+# With the help of Audacity for Pytorch and Pytorch documentation
