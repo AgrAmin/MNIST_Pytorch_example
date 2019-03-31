@@ -1,21 +1,3 @@
-'''
-import torch
-from torch.autograd import Variable
-import torch.nn.functional as F
-#import torch.nn as nn #
-#import torchvision.datasets as dsets #
-#import torchvision.transforms as transforms #
-import pandas as pd
-import matplotlib.pyplot as plt
-import seaborn as sns
-#import numpy as np
-from sklearn.model_selection import train_test_split
-from sklearn import preprocessing #for normalization
-'''
-#https://www.youtube.com/watch?v=zFA8Cm13Xmk
-#https://towardsdatascience.com/how-to-train-an-image-classifier-in-pytorch-and-use-it-to-perform-basic-inference-on-single-images-99465a1e9bf5
-#https://www.youtube.com/watch?v=zN49HdDxHi8 #data loder issue and more stuff worth saving or pringting.
-#https://pytorch.org/tutorials/beginner/blitz/cifar10_tutorial.html#sphx-glr-download-beginner-blitz-cifar10-tutorial-py
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -28,44 +10,25 @@ from torch import optim
 import torch.nn.functional as F
 from torchvision import datasets, transforms, models
 
+
 from os import listdir
 from os.path import isfile, join
 
-#Listing the labels training & test set
-mypathTrain=r"C:\Users\Asus\Desktop\CH\colormix\seedr\course dl\practicex\zero_to_deep_learning_video\data\spoken_numbers_pcm\imgTrain"
+mypathTrain=r"C:\data\DataNumTr"
 trainlabel = [f for f in listdir(mypathTrain) if isfile(join(mypathTrain, f))]
 
-mypathTest=r"C:\Users\Asus\Desktop\CH\colormix\seedr\course dl\practicex\zero_to_deep_learning_video\data\spoken_numbers_pcm\imgTest"
-testlabel = [g for g in listdir(mypathTest) if isfile(join(mypathTest, g))]
+#transforma = transforms.Compose(
+ #   [transforms.ToTensor(),
+  #   transforms.Normalize((0.1307), (0.3081))]) #transform (mean) (std)
+transforma = transforms.ToTensor()
 
-transform = transforms.Compose(
-    [transforms.ToTensor(),
-     transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
+train_dataset=datasets.MNIST(root=mypathTrain,train= True,download=False,transform=transforma)
+test_dataset=datasets.MNIST(root=mypathTrain,train=False,download=False,transform=transforma)
 
-# Transforms for the training, validation, and testing sets
-#training_transforms, testing_transforms = processing_functions.data_transforms()
+train_loader=torch.utils.data.DataLoader(train_dataset,batch_size=64, shuffle= True)
+test_loader=torch.utils.data.DataLoader(test_dataset,batch_size=64, shuffle= True)
 
-# Load the datasets with ImageFolder
-#training_dataset, testing_dataset = processing_functions.load_datasets(mypathTrain, transform, mypathTest, transform)
-
-testing_dataset=datasets.ImageFolder(root=mypathTrain,transform=transform)
-training_dataset=datasets.ImageFolder(root=mypathTest,transform=transform)
-
-train_loader=torch.utils.data.DataLoader(training_dataset,batch_size=8, shuffle= True)
-test_loader=torch.utils.data.DataLoader(training_dataset,batch_size=8, shuffle= True)
-
-print(type(test_loader))
-print(type(testing_dataset))
-class_names= testing_dataset.classes
-print(class_names)
-#torchvision.datasets.folder.ImageFolder
-
-# Build and train your network
-# Transfer Learning
-device = torch.device("cuda" if torch.cuda.is_available()
-                                  else "cpu")
-model = models.vgg16(pretrained=True)
-print(model)
+print((test_dataset.classes))
 
 ##### load and show some images for fun #####
 def imshow(img):
@@ -76,107 +39,53 @@ def imshow(img):
 
 
 # get some random training images
-dataiter = iter(train_loader)
-images, labels = dataiter.next()
+dattaiter = iter(test_loader)
+images, labels = dattaiter.next() #******
 
 # show images
 imshow(torchvision.utils.make_grid(images))
 # print labels
-print(' '.join('%5s' % class_names[labels[j]] for j in range(8)))  #range(batch_size)
+print(' '.join('%5s' % train_dataset.classes[labels[j]] for j in range(64)))  #range(batch_size)
 ####End test loading images ### note the number of image showed = batch size ###########
 
-### CNN ###
-class Net(nn.Module):
-    def __init__(self):
-        super(Net, self).__init__()
-        self.conv1 = nn.Conv2d(3, 6, 5)
-        self.pool = nn.MaxPool2d(2, 2)
-        self.conv2 = nn.Conv2d(6, 16, 5)
-        self.fc1 = nn.Linear(16 *117*157, 120)
-        self.fc2 = nn.Linear(120, 84)
-        self.fc3 = nn.Linear(84, 10)
 
-    def forward(self, x):
-        x = self.pool(F.relu(self.conv1(x)))
-        x = self.pool(F.relu(self.conv2(x)))
-        #print(x.size(3))
-        x = x.view(-1,16*117*157)#(len(x[0]),len(x))#(-1, 16 * 5 * 5)
-        x = F.relu(self.fc1(x))
-        x = F.relu(self.fc2(x))
-        x = self.fc3(x)
+print(torch.tensor(images.shape))
+BigT=images
+BigTen=BigT.reshape(64,28*28)
+print(BigTen.shape)
+
+
+class classifierv1 (nn.Module):
+    def __init__(self):
+        super().__init__()
+        #hidden NN
+        self.hidden1= nn.Linear(28*28,128) #
+        self.hidden2= nn.Linear(128,64)
+        #output layer
+        self.output= nn.Linear(64,10)#
+
+    def forward(self,x):
+        # flatten image
+        x = x.view(-1, 28 * 28)
+        x = F.relu(self.hidden1(x))
+        x = F.relu(self.hidden2(x))
+        x = F.softmax(self.output(x),dim=1)
         return x
 
-
-net = Net()
+classifierv2= nn.Sequential(nn.Linear(28*28,128),
+                            nn.ReLU(),
+                            nn.Linear(128,64),
+                            nn.ReLU(),
+                            nn.Linear(64,10),
+                            nn.LogSoftmax())
+#####################################"
+#net = classifierv1()#if you use this remove line 69 or remove resahping of input tensor each time
+net = classifierv2 #same as v1 just cleaner code
 
 ####### loss fucntion and optimizer ###
 criterion = nn.CrossEntropyLoss()
-optimizer = optim.SGD(net.parameters(), lr=0.001, momentum=0.9)
-########"
-'''
-############### freezing the hidden layers ##############
-for param in model.parameters():
-    param.requires_grad = False
+optimizer = optim.SGD(net.parameters(), lr=0.01, momentum=0.9)
 
-model.fc = nn.Sequential(nn.Linear(2048, 512),
-                         nn.ReLU(),
-                         nn.Dropout(0.2),
-                         nn.Linear(512, 10),
-                         nn.LogSoftmax(dim=1))
-criterion = nn.NLLLoss()
-optimizer = optim.Adam(model.fc.parameters(), lr=0.003)
-model.to(device)
-
-
-############# #################
-
-################Training ###################
-epochs = 1
-steps = 0
-running_loss = 0
-print_every = 10
-train_losses, test_losses = [], []
-
-for epoch in range(epochs):
-    for inputs, labels in train_loader:
-        steps += 1
-        inputs, labels = inputs.to(device), labels.to(device)
-        optimizer.zero_grad()
-        logps = model.forward(inputs)
-        loss = criterion(logps, labels)
-        loss.backward()
-        optimizer.step()
-        running_loss += loss.item()
-
-        if steps % print_every == 0:
-            test_loss = 0
-            accuracy = 0
-            model.eval()
-            with torch.no_grad():
-                for inputs, labels in test_loader:
-                    inputs, labels = inputs.to(device),
-                    labels.to(device)
-                logps = model.forward(inputs)
-                batch_loss = criterion(logps, labels)
-                test_loss += batch_loss.item()
-
-                ps = torch.exp(logps)
-                top_p, top_class = ps.topk(1, dim=1)
-                #equals =
-                top_class == labels.view(*top_class.shape)
-            #accuracy +=
-        torch.mean(equals.type(torch.FloatTensor)).item()
-    train_losses.append(running_loss / len(train_loader))
-    test_losses.append(test_loss / len(test_loader))
-    print(f"Epoch {epoch+1}/{epochs}.. "
-          f"Train loss: {running_loss/print_every:.3f}.. "
-          f"Test loss: {test_loss/len(test_loader):.3f}.. "
-          f"Test accuracy: {accuracy/len(test_loader):.3f}")
-    running_loss = 0
-    model.train()
-torch.save(model, 'aerialmodel.pth')
-###############
-'''
 
 for epoch in range(15):  # loop over the dataset multiple times #2 -> 14% accuracy; 10->64%; 25->100%
 
@@ -185,51 +94,29 @@ for epoch in range(15):  # loop over the dataset multiple times #2 -> 14% accura
         # get the inputs
         inputs, labels = data
         #print(torch.Tensor.size(inputs))
-
+        inputss=inputs.reshape(-1,28*28)
+        #print(torch.Tensor.size(inputss))
         # zero the parameter gradients
         optimizer.zero_grad()
 
         # forward + backward + optimize
-        outputs = net(inputs)
+        outputs = net(inputss)
         loss = criterion(outputs, labels)
         loss.backward()
         optimizer.step()
 
-        # print statistics
-        running_loss += loss.item()
-        if i % 2000 == 1999:    # print every 2000 mini-batches
-            print('[%d, %5d] loss: %.3f' %
-                  (epoch + 1, i + 1, running_loss / 2000))
-            running_loss = 0.0
+
 
 print('Finished Training')
 
-##########
-#############Test the Model ###########
-dataiter = iter(test_loader)
-images, labels = dataiter.next()
-
-# print images
-imshow(torchvision.utils.make_grid(images))
-print('GroundTruth: ', ' '.join('%5s' % class_names[labels[j]] for j in range(8)))  #range(batch_size)
-outputs = net(images)
-####################
-
-'''The outputs are energies for the 10 classes. The higher the energy for a class,
- the more the network thinks that the image is of the particular class.
-  So, let’s get the index of the highest energy:'''
-
-_, predicted = torch.max(outputs, 1)
-
-print('Predicted: ', ' '.join('%5s' % class_names[predicted[j]]
-                              for j in range(8)))
 ##########accuracy for the whole dataset ##########
 correct = 0
 total = 0
 with torch.no_grad():
     for data in test_loader:
         images, labels = data
-        outputs = net(images)
+        imagess = images.reshape(-1, 28 * 28)
+        outputs = net(imagess)
         _, predicted = torch.max(outputs.data, 1)
         total += labels.size(0)
         correct += (predicted == labels).sum().item()
@@ -243,7 +130,8 @@ class_total = list(0. for i in range(10))
 with torch.no_grad():
     for data in test_loader:
         images, labels = data
-        outputs = net(images)
+        imagess = images.reshape(-1, 28 * 28)
+        outputs = net(imagess)
         _, predicted = torch.max(outputs, 1)
         c = (predicted == labels).squeeze()
         for i in range(4):
@@ -254,4 +142,4 @@ with torch.no_grad():
 
 for i in range(10):
     print('Accuracy of %5s : %2d %%' % (
-        class_names[i], 100 * class_correct[i] / class_total[i]))
+        train_dataset.classes[i], 100 * class_correct[i] / class_total[i]))
