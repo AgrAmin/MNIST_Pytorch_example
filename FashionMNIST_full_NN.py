@@ -35,7 +35,7 @@ test_dataset=datasets.FashionMNIST(root=mypathTrain,train=False,download=False,t
 # obtain training indices that will be used for validation
 valid_size=0.2
 num_train = len(train_dataset)
-indices = list(range(num_train))
+indices = list(range(num_train)) 
 np.random.shuffle(indices)
 split = int(np.floor(valid_size * num_train))
 train_idx, valid_idx = indices[split:], indices[:split]
